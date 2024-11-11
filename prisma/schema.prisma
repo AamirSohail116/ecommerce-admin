@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  userId    String
+  billboards Billboard[] @relation("StoretoBillboard")
+  categories Category[] @relation("StoretoCategory")
+  sizes Size[] @relation("StoretoSize")
+  colors Color[] @relation("StoretoColor")
+  products Product[] @relation("StoretoProduct")
+  orders Order[] @relation("StoretoOrder")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Billboard {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String          @db.ObjectId
+  store Store @relation("StoretoBillboard", fields: [storeId], references: [id])
+  categories Category[]
+  label String
+  imageUrl String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([storeId])
+}
+
+
+model Category {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String          @db.ObjectId
+  store Store @relation("StoretoCategory", fields: [storeId], references: [id])
+  billboardId   String          @db.ObjectId
+  billboard Billboard @relation( fields: [billboardId], references: [id])
+  products Product[] @relation("CategorytoProduct")
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([storeId])
+  @@index([billboardId])
+}
+
+model Size {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String          @db.ObjectId
+  store Store @relation("StoretoSize", fields: [storeId], references: [id])
+  name String
+  value String
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([storeId])
+}
+
+model Color {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String          @db.ObjectId
+  store Store @relation("StoretoColor", fields: [storeId], references: [id])
+  name String
+  value String
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([storeId])
+}
+
+model Product {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String          @db.ObjectId
+  store Store @relation("StoretoProduct", fields: [storeId], references: [id])
+  categoryId   String          @db.ObjectId
+  category Category @relation("CategorytoProduct", fields: [categoryId], references: [id])
+  name String
+  price Int
+  isFeatured Boolean @default(false)
+  isArchived Boolean @default(false)
+  sizeId   String          @db.ObjectId
+  size Size @relation(fields: [sizeId], references: [id])
+  colorId   String          @db.ObjectId
+  color Color @relation(fields: [colorId], references: [id])
+  images Image[]
+  orderItems OrderItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@index([storeId])
+}
+
+model Image {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  productId String          @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url String
+   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+}
+
+model Order {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  storeId String            @db.ObjectId
+  store   Store @relation("StoretoOrder",fields: [storeId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  isPaid Boolean @default(false)
+  phone String @default("")
+  address String @default("")
+   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+}
+
+model OrderItem {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  orderId String            @db.ObjectId
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String            @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+ 
+   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+}
